@@ -222,7 +222,7 @@ while True:
         Distance.append(storedDist)
     elif 'left child' in text:
         if 'NULL' in text:
-            leftChild.append(None)
+            leftChild.append("None")
         else:
             tempLeftChild = text.split("number: ",2)[1]
             temp2LeftChild = tempLeftChild.split()[0]
@@ -330,11 +330,16 @@ class ClockTreeGUI():
         self.ClearButton.grid(row = 1, column = 2, sticky = 'NW')
         
         global displayList #displayList is used to keep track of how many nodes have been displayed... later used to clear them
+        global parentChildList
         displayList = []
+        parentChildList = []
        
         #Print the Nodes into the list box here
         for i in range(0, len(NodeNumbers)):
             self.ListBox1.insert(END, "Node Number: " + str(i))
+
+        #Bind keys here
+        self.canvasTree.bind("<MouseWheel>", self.zoomer)
 
         #Configure the widgets here
         root.config(menu = menubar)
@@ -371,11 +376,14 @@ class ClockTreeGUI():
             if (xpoints[i] == targetX and ypoints[i] == targetY):
                 oval = self.canvasTree.create_oval(targetX  - 5, -targetY + 5, targetX + 5, -targetY - 5, width = 2, outline = 'blue')
                 displayList.append(oval)
- 
+        self.connectParent(numberFloat)
+
     def clearText(self):
         self.NodeInfoTextBox.delete('1.0', END)
         for i in range(0, len(displayList)):
             self.canvasTree.delete(displayList[i])
+        for j in range(0, len(parentChildList)):
+            self.canvasTree.delete(parentChildList[j])
 
     def getAxis(self):
        axis = []
@@ -392,6 +400,32 @@ class ClockTreeGUI():
     def close(self):
         exit(-1)
 
+    def connectParent(self, target):
+        node = List.getNode(target)
+        if(node.LeftChild != "None" and node.RightChild != "None"):
+            leftChild = List.getNode(node.LeftChild)
+            rightChild = List.getNode(node.RightChild)
+            nodeX = node.LocationX
+            nodeY = node.LocationY
+            leftX = leftChild.LocationX
+            leftY = leftChild.LocationY
+            rightX = rightChild.LocationX
+            rightY = rightChild.LocationY
+            connectLeft = self.canvasTree.create_line(nodeX - 5, -nodeY + 5, leftX + 5, -leftY - 5, width = 2, fill = 'green')
+            connectRight = self.canvasTree.create_line(nodeX -5, -nodeY + 5, rightX + 5, -rightY - 5, width = 2, fill = 'green')
+            circleLeft = self.canvasTree.create_oval(leftX  - 5, -leftY + 5, leftX + 5, -leftY - 5, width = 2, outline = 'blue')
+            circleRight = self.canvasTree.create_oval(rightX  - 5, -rightY + 5, rightX + 5, -rightY - 5, width = 2, outline = 'blue') 
+            parentChildList.append(connectLeft)
+            parentChildList.append(connectRight)
+            displayList.append(circleLeft)
+            displayList.append(circleRight)
+
+    def zoomer(self, event):
+        if(event.delta > 0):
+            self.canvasTree.scale("all", event.x, event.y, 1.1, 1.1)
+        elif (event.delta < 0):
+            self.canvasTree.scale("all", event.x, event.y, 0.9, 0.9)
+        self.canvasTree.configure(scrollregion = self.canvasTree.bbox("all"))
 
 root = Tk()
 my_gui = ClockTreeGUI(root)
