@@ -388,9 +388,9 @@ class ClockTreeGUI():
     def getAxis(self):
        axis = []
        minx = min(LocationX) - 100
-       maxx = max(LocationX) + 100
+       maxx = max(LocationX) + 10
        miny = min(LocationY) - 2000
-       maxy = max(LocationY)
+       maxy = max(LocationY) - 1950
        axis = [minx, miny, maxx, maxy]
        return axis
     
