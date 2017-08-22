@@ -10,13 +10,11 @@ How to Use:
   Refer to the comments within the code if you have any issues.
 
 Features:
-  Graphical User Interface for plotting of .im files for clock tree synthesis
-  Search feature for finding nodes more easily
-  Display feature to print relevent information of the nodes into a window and circle the node in the plot
-  Clear feature that removes the detailed node information and any circled nodes in the plot
+  Graphical User Interface for plotting of .im files for clock tree synthesis, 
+  Search feature for finding nodes more easily, 
+  Display feature to print relevent information of the nodes into a window and circle the node in the plot, 
+  Clear feature that removes the detailed node information and any circled nodes in the plot, 
+  Zoom feature now available for plot
  
 Future Work:
-  Add zoom feature for the plot
-  Add mouse zoom for the plot
-  Add lines to connect the parent to its children
-  Add <return> support for the search bar
+  Add return support for the search bar
