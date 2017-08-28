@@ -291,6 +291,8 @@ class ClockTreeGUI():
 
         axis = self.getAxis()
      
+        self.v = IntVar()
+        self.v.set(0)
         self.frame1 = LabelFrame(root, text = "Clock Tree", width = 1280, height = 390, bd = 5)
         self.frame2 = LabelFrame(root, text = "List of Nodes", width = 640, height = 300, bd = 5)
         self.frame3 = LabelFrame(root, text = "Detailed Node Information", width = 640, height = 350, bd = 5)
@@ -300,12 +302,13 @@ class ClockTreeGUI():
         self.scrollBarText = Scrollbar(self.frame3, orient = VERTICAL)
         self.scrollBarGraphY = Scrollbar(self.frame1, orient = VERTICAL)
         self.scrollBarGraphX = Scrollbar(self.frame1, orient = HORIZONTAL)
-        self.ListBox1 = Listbox(self.frame2, width = 18, height = 16, yscrollcommand = self.scrollBar.set)
+        self.ListBox1 = Listbox(self.frame2, width = 18, height = 15, yscrollcommand = self.scrollBar.set)
         self.SearchEntry = Entry(self.frame4, width = 25)
-        self.NodeInfoTextBox = Text(self.frame3, height = 16, width = 85, yscrollcommand = self.scrollBarText.set)
+        self.NodeInfoTextBox = Text(self.frame3, height = 15, width = 85, yscrollcommand = self.scrollBarText.set)
         self.SearchButton = Button(text = "Search", width = 25, command = self.searchNode)
         self.DisplayButton = Button(text = "Display", width = 25, command = self.displayNodeInfo)
         self.ClearButton = Button(text = "Clear", width = 25, command = self.clearText)
+        self.RadioButton = Radiobutton(root, text = "Display Children with Parent", variable = self.v)
         
         #Plot the values into the canvas
         for i in range(0, len(LocationX)):
@@ -328,7 +331,7 @@ class ClockTreeGUI():
         self.SearchButton.grid(row = 1, column = 1, sticky = 'W')
         self.DisplayButton.grid(row = 1, column = 2, sticky = 'W')
         self.ClearButton.grid(row = 1, column = 2, sticky = 'NW')
-        
+        self.RadioButton.grid(row = 2, column = 1, sticky = 'NW')
         global displayList #displayList is used to keep track of how many nodes have been displayed... later used to clear them
         global parentChildList
         displayList = []
@@ -377,7 +380,10 @@ class ClockTreeGUI():
                 oval = self.canvasTree.create_oval(targetX  - 5, -targetY + 5, targetX + 5, -targetY - 5, width = 2, outline = 'blue')
                 displayList.append(oval)
         self.connectParent(numberFloat)
-
+        choice = self.v.get()
+        if(choice == 1):
+            self.showChildren(target)
+    
     def clearText(self):
         self.NodeInfoTextBox.delete('1.0', END)
         for i in range(0, len(displayList)):
@@ -390,7 +396,7 @@ class ClockTreeGUI():
        minx = min(LocationX) - 100
        maxx = max(LocationX) + 10
        miny = min(LocationY) - 2000
-       maxy = max(LocationY) - 1950
+       maxy = max(LocationY) - 1900
        axis = [minx, miny, maxx, maxy]
        return axis
     
@@ -426,6 +432,20 @@ class ClockTreeGUI():
         elif (event.delta < 0):
             self.canvasTree.scale("all", event.x, event.y, 0.9, 0.9)
         self.canvasTree.configure(scrollregion = self.canvasTree.bbox("all"))
+
+    def showChildren(self, parent):
+        leftChildNum = parent.LeftChild
+        rightChildNum = parent.RightChild
+        if(leftChildNum != "None"):
+            self.leftChild = Toplevel(width = 85, height = 16)
+            self.textBoxLeft = Text(self.leftChild, height = 25, width = 85, yscrollcommand = self.scrollBarText.set)
+            self.textBoxLeft.pack()
+            self.textBoxLeft.insert(END, List.PrintNodeDetails(leftChildNum))
+        if (rightChildNum != "None"):
+            self.rightChild = Toplevel(width = 85, height = 16)
+            self.textBoxRight = Text(self.rightChild, height = 25, width = 85, yscrollcommand = self.scrollBarText.set)
+            self.textBoxRight.pack()
+            self.textBoxRight.insert(END, List.PrintNodeDetails(rightChildNum))
 
 root = Tk()
 my_gui = ClockTreeGUI(root)
