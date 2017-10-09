@@ -1,8 +1,12 @@
 #Author: Jacob Baron and Scott Lerner
 #Developer's Notes: Below is a scripting software that parses .im files for Node Number, the Parent, the Buffer, the Left Child, and the Right Child (and etc.) and
 #places the information into a singly linked-list.
+import matplotlib
 from tkinter import *
-
+matplotlib.use('TkAgg')
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.backend_bases import key_press_handler
+from matplotlib.figure import Figure
 class Node:
     def __init__(self, NodeNumber, Capacitance, Delay, LocationX, LocationY, OrigPermReg, PermReg, SubtreeCost, SlewConstant, Parent, Buf, Distance, LeftChild, RightChild):
         self.NodeNumber = NodeNumber
@@ -289,19 +293,26 @@ class ClockTreeGUI():
         helpmenu.add_command(label = "How to Use", command = self.showHelp)
         menubar.add_cascade(label = "Help", menu = helpmenu)
 
-        axis = self.getAxis()
+
+        f = Figure(figsize=(7,4), dpi =100)
+        a = f.add_subplot(111)
+        a.plot(LocationX, LocationY)
+
+        a.set_title('Clock Tree')
+        a.set_xlabel('X-Location')
+        a.set_ylabel('Y-Location')
+
+
      
         self.v = IntVar()
         self.v.set(0)
-        self.frame1 = LabelFrame(root, text = "Clock Tree", width = 1280, height = 390, bd = 5)
         self.frame2 = LabelFrame(root, text = "List of Nodes", width = 640, height = 300, bd = 5)
         self.frame3 = LabelFrame(root, text = "Detailed Node Information", width = 640, height = 350, bd = 5)
         self.frame4 = LabelFrame(root, text = "Search", width = 200, height = 100, bd = 5)
-        self.canvasTree = Canvas(self.frame1, width = 1250, height = 390, bg = "white", scrollregion = (axis[0], axis[1], axis[2], axis[3])) #(W,N,E,S)
+        self.canvasTree = FigureCanvasTkAgg(f, master = root)
+        toolbarFrame = Frame(root)
         self.scrollBar = Scrollbar(self.frame2, orient = VERTICAL, jump = 1)
         self.scrollBarText = Scrollbar(self.frame3, orient = VERTICAL)
-        self.scrollBarGraphY = Scrollbar(self.frame1, orient = VERTICAL)
-        self.scrollBarGraphX = Scrollbar(self.frame1, orient = HORIZONTAL)
         self.ListBox1 = Listbox(self.frame2, width = 18, height = 15, yscrollcommand = self.scrollBar.set)
         self.SearchEntry = Entry(self.frame4, width = 25)
         self.NodeInfoTextBox = Text(self.frame3, height = 15, width = 85, yscrollcommand = self.scrollBarText.set)
@@ -310,47 +321,39 @@ class ClockTreeGUI():
         self.ClearButton = Button(text = "Clear", width = 25, command = self.clearText)
         self.RadioButton = Radiobutton(root, text = "Display Children with Parent", variable = self.v)
         
-        #Plot the values into the canvas
-        for i in range(0, len(LocationX)):
-            x = abs(LocationX[i])
-            y = abs(LocationY[i])
-            self.canvasTree.create_line(x-5, -1 * y, x+5, -1 * y, tags = 'all', fill = 'red', width = 2) #Y axis must be negative!
-        
+        canvas = FigureCanvasTkAgg(f, master = root)
+        canvas.show()
+        canvas.get_tk_widget().grid(row = 1, column = 1, columnspan = 5)
+        canvas._tkcanvas.grid(row = 0, column = 1)
+        toolbarFrame.grid(row=0, column = 0, columnspan = 2)
+        toolbar = NavigationToolbar2TkAgg(canvas, toolbarFrame)
         #Set up the grid of the GUI here
-        self.canvasTree.grid(row = 0, column = 0)
-        self.scrollBar.grid(row = 1, column = 1, sticky = 'NW')
-        self.scrollBarGraphY.grid(row = 0, column = 4)
-        self.scrollBarGraphX.grid(row = 1, column = 0)
-        self.ListBox1.grid(row = 1, column = 0 )
-        self.NodeInfoTextBox.grid(row = 1, column = 2)
-        self.SearchEntry.grid(row = 1, column = 1, rowspan = 2)
-        self.frame1.grid(row = 0, column = 0, columnspan = 4)
-        self.frame2.grid(row = 1, column = 0)
-        self.frame3.grid(row = 1, column = 3, sticky = 'NW')
-        self.frame4.grid(row = 1, column = 1, sticky = 'NW')
-        self.SearchButton.grid(row = 1, column = 1, sticky = 'W')
-        self.DisplayButton.grid(row = 1, column = 2, sticky = 'W')
-        self.ClearButton.grid(row = 1, column = 2, sticky = 'NW')
-        self.RadioButton.grid(row = 2, column = 1, sticky = 'NW')
-        global displayList #displayList is used to keep track of how many nodes have been displayed... later used to clear them
-        global parentChildList
-        displayList = []
-        parentChildList = []
+        self.scrollBar.grid(row = 2, column = 1, sticky = 'NW')
+        self.ListBox1.grid(row = 2, column = 0 )
+        self.NodeInfoTextBox.grid(row = 2, column = 0)
+        self.SearchEntry.grid(row = 2, column = 1)
+        
+        self.frame2.grid(row = 2, column = 0)
+        self.frame3.grid(row = 2, column = 3, sticky = 'NW')
+        self.frame4.grid(row = 2, column = 1, sticky = 'NW')
+        self.SearchButton.grid(row = 2, column = 1, sticky = 'W')
+        self.DisplayButton.grid(row = 2, column = 2)
+        self.ClearButton.grid(row = 2, column = 2, sticky = 'NW')
+        self.RadioButton.grid(row = 3, column = 1, sticky = 'NW')
        
+       
+   
+
         #Print the Nodes into the list box here
         for i in range(0, len(NodeNumbers)):
             self.ListBox1.insert(END, "Node Number: " + str(i))
 
-        #Bind keys here
-        self.canvasTree.bind("<MouseWheel>", self.zoomer)
 
         #Configure the widgets here
         root.config(menu = menubar)
         self.scrollBar.config(command = self.ListBox1.yview)
         self.scrollBarText.config(command = self.NodeInfoTextBox.yview)
-        self.scrollBarGraphY.config(command = self.canvasTree.yview)
-        self.scrollBarGraphX.config(command = self.canvasTree.xview)
-        self.canvasTree.config(yscrollcommand = self.scrollBarGraphY.set, xscrollcommand = self.scrollBarGraphX.set)
+       
     
 ####### Utility functions to display node information ##########
     def searchNode(self):
@@ -370,17 +373,6 @@ class ClockTreeGUI():
         number = value.strip("Node Number: ")
         numberFloat = float(number)
         self.NodeInfoTextBox.insert(END, List.PrintNodeDetails(numberFloat))
-        xpoints = LocationX
-        ypoints = LocationY
-        target = List.getNode(numberFloat)
-        targetX = target.LocationX
-        targetY = target.LocationY
-        for i in range(0, len(LocationX)):
-            if (xpoints[i] == targetX and ypoints[i] == targetY):
-                oval = self.canvasTree.create_oval(targetX  - 5, -targetY + 5, targetX + 5, -targetY - 5, width = 2, outline = 'blue')
-                displayList.append(oval)
-        self.connectParent(numberFloat)
-        choice = self.v.get()
         if(choice == 1):
             self.showChildren(target)
     
@@ -391,47 +383,12 @@ class ClockTreeGUI():
         for j in range(0, len(parentChildList)):
             self.canvasTree.delete(parentChildList[j])
 
-    def getAxis(self):
-       axis = []
-       minx = min(LocationX) - 100
-       maxx = max(LocationX) + 10
-       miny = min(LocationY) - 2000
-       maxy = max(LocationY) - 1900
-       axis = [minx, miny, maxx, maxy]
-       return axis
-    
     def showHelp(self):
         print("This is a work in progress\n")
 
     def close(self):
         exit(-1)
 
-    def connectParent(self, target):
-        node = List.getNode(target)
-        if(node.LeftChild != "None" and node.RightChild != "None"):
-            leftChild = List.getNode(node.LeftChild)
-            rightChild = List.getNode(node.RightChild)
-            nodeX = node.LocationX
-            nodeY = node.LocationY
-            leftX = leftChild.LocationX
-            leftY = leftChild.LocationY
-            rightX = rightChild.LocationX
-            rightY = rightChild.LocationY
-            connectLeft = self.canvasTree.create_line(nodeX - 5, -nodeY + 5, leftX + 5, -leftY - 5, width = 2, fill = 'green')
-            connectRight = self.canvasTree.create_line(nodeX -5, -nodeY + 5, rightX + 5, -rightY - 5, width = 2, fill = 'green')
-            circleLeft = self.canvasTree.create_oval(leftX  - 5, -leftY + 5, leftX + 5, -leftY - 5, width = 2, outline = 'blue')
-            circleRight = self.canvasTree.create_oval(rightX  - 5, -rightY + 5, rightX + 5, -rightY - 5, width = 2, outline = 'blue') 
-            parentChildList.append(connectLeft)
-            parentChildList.append(connectRight)
-            displayList.append(circleLeft)
-            displayList.append(circleRight)
-
-    def zoomer(self, event):
-        if(event.delta > 0):
-            self.canvasTree.scale("all", event.x, event.y, 1.1, 1.1)
-        elif (event.delta < 0):
-            self.canvasTree.scale("all", event.x, event.y, 0.9, 0.9)
-        self.canvasTree.configure(scrollregion = self.canvasTree.bbox("all"))
 
     def showChildren(self, parent):
         leftChildNum = parent.LeftChild
