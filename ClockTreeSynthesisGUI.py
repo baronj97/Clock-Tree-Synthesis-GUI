@@ -6,6 +6,7 @@ from tkinter import *
 matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.backend_bases import key_press_handler
+from matplotlib.backend_bases import MouseEvent
 from matplotlib.figure import Figure
 class Node:
     def __init__(self, NodeNumber, Capacitance, Delay, LocationX, LocationY, OrigPermReg, PermReg, SubtreeCost, SlewConstant, Parent, Buf, Distance, LeftChild, RightChild):
@@ -283,7 +284,6 @@ class ClockTreeGUI():
         root.minsize(width = 1280, height = 750)
         root.maxsize(width = 1280, height = 750)
 
-
         #Place widgets below here
         menubar = Menu(root)
         filemenu = Menu(menubar, tearoff = 0)
@@ -293,17 +293,14 @@ class ClockTreeGUI():
         helpmenu.add_command(label = "How to Use", command = self.showHelp)
         menubar.add_cascade(label = "Help", menu = helpmenu)
 
-
         f = Figure(figsize=(7,4), dpi =100)
         a = f.add_subplot(111)
-        a.plot(LocationX, LocationY)
+        a.plot(LocationX, LocationY, '.')
 
         a.set_title('Clock Tree')
         a.set_xlabel('X-Location')
         a.set_ylabel('Y-Location')
 
-
-     
         self.v = IntVar()
         self.v.set(0)
         self.frame2 = LabelFrame(root, text = "List of Nodes", width = 640, height = 300, bd = 5)
@@ -325,7 +322,36 @@ class ClockTreeGUI():
         canvas.show()
         canvas.get_tk_widget().grid(row = 1, column = 1, columnspan = 5)
         canvas._tkcanvas.grid(row = 0, column = 1)
-        toolbarFrame.grid(row=0, column = 0, columnspan = 2)
+       
+        def getClosestNode(self, XCoord, YCoord):
+            xIndex= 0
+            while(xIndex < len(LocationX)):
+                  if(LocationX[xIndex] == XCoord):
+                      break
+                  else:
+                      xIndex = xIndex  + 1
+            yIndex= 0
+            while(yIndex < len(LocationY)):
+                  if(LocationY[yIndex] == YCoord):
+                      break
+                  else:
+                      yIndex = yIndex  + 1
+            if(yIndex == xIndex):
+                self.NodeInfoTextBox.insert(END, List.PrintNodeDetails(xIndex))
+
+
+        def callback(event):
+            global XCoord, YCoord
+            tempx = float(event.xdata)
+            tempy = float(event.ydata)
+            XCoord = float(round(tempx,2))
+            YCoord = float(round(tempy,2))
+            getClosestNode(self, XCoord, YCoord)
+            
+        canvas.mpl_connect('button_press_event', callback)
+        
+
+        toolbarFrame.grid(row=0, column = 0, columnspan = 3)
         toolbar = NavigationToolbar2TkAgg(canvas, toolbarFrame)
         #Set up the grid of the GUI here
         self.scrollBar.grid(row = 2, column = 1, sticky = 'NW')
@@ -340,21 +366,19 @@ class ClockTreeGUI():
         self.DisplayButton.grid(row = 2, column = 2)
         self.ClearButton.grid(row = 2, column = 2, sticky = 'NW')
         self.RadioButton.grid(row = 3, column = 1, sticky = 'NW')
-       
-       
-   
+
+
+
 
         #Print the Nodes into the list box here
         for i in range(0, len(NodeNumbers)):
             self.ListBox1.insert(END, "Node Number: " + str(i))
-
 
         #Configure the widgets here
         root.config(menu = menubar)
         self.scrollBar.config(command = self.ListBox1.yview)
         self.scrollBarText.config(command = self.NodeInfoTextBox.yview)
        
-    
 ####### Utility functions to display node information ##########
     def searchNode(self):
         node = self.SearchEntry.get()
@@ -388,7 +412,6 @@ class ClockTreeGUI():
 
     def close(self):
         exit(-1)
-
 
     def showChildren(self, parent):
         leftChildNum = parent.LeftChild
