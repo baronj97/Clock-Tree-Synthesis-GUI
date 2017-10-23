@@ -294,9 +294,9 @@ class ClockTreeGUI():
         menubar.add_cascade(label = "Help", menu = helpmenu)
 
         f = Figure(figsize=(7,4), dpi =100)
+        global a
         a = f.add_subplot(111)
         a.plot(LocationX, LocationY, '.')
-
         a.set_title('Clock Tree')
         a.set_xlabel('X-Location')
         a.set_ylabel('Y-Location')
@@ -316,28 +316,25 @@ class ClockTreeGUI():
         self.SearchButton = Button(text = "Search", width = 25, command = self.searchNode)
         self.DisplayButton = Button(text = "Display", width = 25, command = self.displayNodeInfo)
         self.ClearButton = Button(text = "Clear", width = 25, command = self.clearText)
-        self.RadioButton = Radiobutton(root, text = "Display Children with Parent", variable = self.v)
+        self.CheckButton = Checkbutton(root, text = "Display Children with Parent", onvalue = 1, offvalue = 0, variable = self.v)
         
         canvas = FigureCanvasTkAgg(f, master = root)
         canvas.show()
         canvas.get_tk_widget().grid(row = 1, column = 1, columnspan = 5)
         canvas._tkcanvas.grid(row = 0, column = 1)
-       
+
         def getClosestNode(self, XCoord, YCoord):
-            xIndex= 0
-            while(xIndex < len(LocationX)):
-                  if(LocationX[xIndex] == XCoord):
-                      break
-                  else:
-                      xIndex = xIndex  + 1
-            yIndex= 0
-            while(yIndex < len(LocationY)):
-                  if(LocationY[yIndex] == YCoord):
-                      break
-                  else:
-                      yIndex = yIndex  + 1
-            if(yIndex == xIndex):
-                self.NodeInfoTextBox.insert(END, List.PrintNodeDetails(xIndex))
+            closestNode = 0
+            totaldistance = 100000000000.0
+            xdistance = 0.0
+            ydistance = 0.0
+            for i in range(0, len(LocationX)):
+                xdistance = abs(XCoord - LocationX[i])
+                ydistance = abs(YCoord - LocationY[i])
+                if(totaldistance > (xdistance + ydistance)):
+                    totaldistance = xdistance + ydistance
+                    closestNode = i
+            self.NodeInfoTextBox.insert(END, List.PrintNodeDetails(closestNode))
 
 
         def callback(event):
@@ -350,7 +347,6 @@ class ClockTreeGUI():
             
         canvas.mpl_connect('button_press_event', callback)
         
-
         toolbarFrame.grid(row=0, column = 0, columnspan = 3)
         toolbar = NavigationToolbar2TkAgg(canvas, toolbarFrame)
         #Set up the grid of the GUI here
@@ -365,7 +361,7 @@ class ClockTreeGUI():
         self.SearchButton.grid(row = 2, column = 1, sticky = 'W')
         self.DisplayButton.grid(row = 2, column = 2)
         self.ClearButton.grid(row = 2, column = 2, sticky = 'NW')
-        self.RadioButton.grid(row = 3, column = 1, sticky = 'NW')
+        self.CheckButton.grid(row = 3, column = 1, sticky = 'NW')
 
 
 
@@ -396,16 +392,16 @@ class ClockTreeGUI():
         value = self.ListBox1.get(line[0])
         number = value.strip("Node Number: ")
         numberFloat = float(number)
+        choice = self.v.get()
         self.NodeInfoTextBox.insert(END, List.PrintNodeDetails(numberFloat))
+        target = List.getNode(numberFloat)
         if(choice == 1):
             self.showChildren(target)
-    
+        a.plot(target.LocationX, target.LocationY, marker = 'o')
+        
+
     def clearText(self):
         self.NodeInfoTextBox.delete('1.0', END)
-        for i in range(0, len(displayList)):
-            self.canvasTree.delete(displayList[i])
-        for j in range(0, len(parentChildList)):
-            self.canvasTree.delete(parentChildList[j])
 
     def showHelp(self):
         print("This is a work in progress\n")
