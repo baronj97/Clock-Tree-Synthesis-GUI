@@ -398,6 +398,16 @@ class ClockTreeGUI():
         if(choice == 1):
             self.showChildren(target)
         a.plot(target.LocationX, target.LocationY, marker = 'o')
+        if(target.LeftChild != None):
+            leftChild = List.getNode(target.LeftChild)
+            x = [target.LocationX, leftChild.LocationX]
+            y = [target.LocationY, leftChild.LocationY]
+            a.plot(x,y)
+        if(target.RightChild != None):
+            rightChild = List.getNode(target.RightChild)
+            x = [target.LocationX, rightChild.LocationX]
+            y = [target.LocationY, rightChild.LocationY]
+            a.plot(x,y)
         
 
     def clearText(self):
