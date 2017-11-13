@@ -2,6 +2,7 @@
 #Developer's Notes: Below is a scripting software that parses .im files for Node Number, the Parent, the Buffer, the Left Child, and the Right Child (and etc.) and
 #places the information into a singly linked-list.
 import matplotlib
+import pylab as plt
 from tkinter import *
 matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
@@ -293,6 +294,7 @@ class ClockTreeGUI():
         helpmenu.add_command(label = "How to Use", command = self.showHelp)
         menubar.add_cascade(label = "Help", menu = helpmenu)
 
+        global f
         f = Figure(figsize=(7,4), dpi =100)
         global a
         a = f.add_subplot(111)
@@ -318,6 +320,7 @@ class ClockTreeGUI():
         self.ClearButton = Button(text = "Clear", width = 25, command = self.clearText)
         self.CheckButton = Checkbutton(root, text = "Display Children with Parent", onvalue = 1, offvalue = 0, variable = self.v)
         
+        global canvas
         canvas = FigureCanvasTkAgg(f, master = root)
         canvas.show()
         canvas.get_tk_widget().grid(row = 1, column = 1, columnspan = 5)
@@ -403,11 +406,13 @@ class ClockTreeGUI():
             x = [target.LocationX, leftChild.LocationX]
             y = [target.LocationY, leftChild.LocationY]
             a.plot(x,y)
+            canvas.draw()
         if(target.RightChild != None):
             rightChild = List.getNode(target.RightChild)
             x = [target.LocationX, rightChild.LocationX]
             y = [target.LocationY, rightChild.LocationY]
             a.plot(x,y)
+            canvas.draw()
         
 
     def clearText(self):
