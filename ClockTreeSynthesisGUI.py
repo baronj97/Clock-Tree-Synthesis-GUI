@@ -116,16 +116,17 @@ class LinkedList:
         return count
 
     def getNode(self, index):
-        if(index > len(NodeNumbers)):
+        target = float(index)
+        if(target > len(NodeNumbers)):
             print("This Node does not exist")
             return
         else:
             node = self.head
             i = 0
-            while (i< index):
+            while (i< target):
                 node = node.next
                 i = i + 1
-            if (i == index):
+            if (i == target):
                 target = node
                 return target
 #################### Parsing Begins Here ########################
@@ -293,6 +294,9 @@ class ClockTreeGUI():
         helpmenu = Menu(menubar, tearoff = 0)
         helpmenu.add_command(label = "How to Use", command = self.showHelp)
         menubar.add_cascade(label = "Help", menu = helpmenu)
+        levelmenu = Menu(menubar, tearoff = 0)
+        levelmenu.add_command(label = "Enable Levels")
+        menubar.add_cascade(label = "Levels", menu = levelmenu)
 
         global f
         f = Figure(figsize=(7,4), dpi =100)
@@ -394,20 +398,21 @@ class ClockTreeGUI():
         line = self.ListBox1.curselection()
         value = self.ListBox1.get(line[0])
         number = value.strip("Node Number: ")
-        numberFloat = float(number)
+        numberFloat = int(number)
         choice = self.v.get()
         self.NodeInfoTextBox.insert(END, List.PrintNodeDetails(numberFloat))
         target = List.getNode(numberFloat)
         if(choice == 1):
             self.showChildren(target)
         a.plot(target.LocationX, target.LocationY, marker = 'o')
-        if(target.LeftChild != None):
+        canvas.draw()
+        if(target.LeftChild != "None"):
             leftChild = List.getNode(target.LeftChild)
             x = [target.LocationX, leftChild.LocationX]
             y = [target.LocationY, leftChild.LocationY]
             a.plot(x,y)
             canvas.draw()
-        if(target.RightChild != None):
+        if(target.RightChild != "None"):
             rightChild = List.getNode(target.RightChild)
             x = [target.LocationX, rightChild.LocationX]
             y = [target.LocationY, rightChild.LocationY]
@@ -417,6 +422,15 @@ class ClockTreeGUI():
 
     def clearText(self):
         self.NodeInfoTextBox.delete('1.0', END)
+        f.clf()
+        canvas.draw()
+        a = f.add_subplot(111)
+        a.plot(LocationX, LocationY, '.')
+        a.set_title('Clock Tree')
+        a.set_xlabel('X-Location')
+        a.set_ylabel('Y-Location')
+        canvas.show()
+
 
     def showHelp(self):
         print("This is a work in progress\n")
