@@ -295,7 +295,7 @@ class ClockTreeGUI():
         helpmenu.add_command(label = "How to Use", command = self.showHelp)
         menubar.add_cascade(label = "Help", menu = helpmenu)
         levelmenu = Menu(menubar, tearoff = 0)
-        levelmenu.add_command(label = "Enable Levels")
+        levelmenu.add_command(label = "Enable Level 0", command = self.enableLevelZero)
         menubar.add_cascade(label = "Levels", menu = levelmenu)
 
         global f
@@ -424,6 +424,7 @@ class ClockTreeGUI():
         self.NodeInfoTextBox.delete('1.0', END)
         f.clf()
         canvas.draw()
+        global a
         a = f.add_subplot(111)
         a.plot(LocationX, LocationY, '.')
         a.set_title('Clock Tree')
@@ -451,6 +452,33 @@ class ClockTreeGUI():
             self.textBoxRight = Text(self.rightChild, height = 25, width = 85, yscrollcommand = self.scrollBarText.set)
             self.textBoxRight.pack()
             self.textBoxRight.insert(END, List.PrintNodeDetails(rightChildNum))
+
+    def enableLevelZero(self):
+        levelZeroX = []
+        levelZeroY = []
+        for i in range(0, len(Buffers)-1):
+            if(Buffers[i] == 0):
+                target = List.getNode(i)
+                levelZeroX.append(target.LocationX)
+                levelZeroY.append(target.LocationY)
+                #if(target.LeftChild != "None"):
+                    #leftChild = List.getNode(target.LeftChild)
+                    #x = [target.LocationX, leftChild.LocationX]
+                    #y = [target.LocationY, leftChild.LocationY]
+                    #a.plot(x,y)
+                    #canvas.draw()
+                #if(target.RightChild != "None"):
+                    #rightChild = List.getNode(target.RightChild)
+                    #x = [target.LocationX, rightChild.LocationX]
+                    #y = [target.LocationY, rightChild.LocationY]
+                    #a.plot(x,y)
+                    #canvas.draw()
+
+        a.plot(levelZeroX, levelZeroY, '.')
+        canvas.draw()
+             
+             
+
 
 root = Tk()
 my_gui = ClockTreeGUI(root)
