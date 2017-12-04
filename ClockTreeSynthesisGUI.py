@@ -297,6 +297,7 @@ class ClockTreeGUI():
         levelmenu = Menu(menubar, tearoff = 0)
         levelmenu.add_command(label = "Enable Level 0", command = self.enableLevelZero)
         menubar.add_cascade(label = "Levels", menu = levelmenu)
+        levelmenu.add_command(label = "Enable Level 1", command = self.enableLevelOne)
 
         global f
         f = Figure(figsize=(7,4), dpi =100)
@@ -309,6 +310,8 @@ class ClockTreeGUI():
 
         self.v = IntVar()
         self.v.set(0)
+        self.y = IntVar()
+        self.y.set(0)
         self.frame2 = LabelFrame(root, text = "List of Nodes", width = 640, height = 300, bd = 5)
         self.frame3 = LabelFrame(root, text = "Detailed Node Information", width = 640, height = 350, bd = 5)
         self.frame4 = LabelFrame(root, text = "Search", width = 200, height = 100, bd = 5)
@@ -323,6 +326,7 @@ class ClockTreeGUI():
         self.DisplayButton = Button(text = "Display", width = 25, command = self.displayNodeInfo)
         self.ClearButton = Button(text = "Clear", width = 25, command = self.clearText)
         self.CheckButton = Checkbutton(root, text = "Display Children with Parent", onvalue = 1, offvalue = 0, variable = self.v)
+        self.CheckButtonNode  = Checkbutton(root, text = "Enable Click-to-Select Node", onvalue = 1, offvalue = 0, variable = self.y)
         
         global canvas
         canvas = FigureCanvasTkAgg(f, master = root)
@@ -360,8 +364,7 @@ class ClockTreeGUI():
         self.scrollBar.grid(row = 2, column = 1, sticky = 'NW')
         self.ListBox1.grid(row = 2, column = 0 )
         self.NodeInfoTextBox.grid(row = 2, column = 0)
-        self.SearchEntry.grid(row = 2, column = 1)
-        
+        self.SearchEntry.grid(row = 2, column = 1)   
         self.frame2.grid(row = 2, column = 0)
         self.frame3.grid(row = 2, column = 3, sticky = 'NW')
         self.frame4.grid(row = 2, column = 1, sticky = 'NW')
@@ -369,10 +372,7 @@ class ClockTreeGUI():
         self.DisplayButton.grid(row = 2, column = 2)
         self.ClearButton.grid(row = 2, column = 2, sticky = 'NW')
         self.CheckButton.grid(row = 3, column = 1, sticky = 'NW')
-
-
-
-
+        self.CheckButtonNode.grid(row = 4, column = 1, sticky = 'NW')
         #Print the Nodes into the list box here
         for i in range(0, len(NodeNumbers)):
             self.ListBox1.insert(END, "Node Number: " + str(i))
@@ -410,15 +410,14 @@ class ClockTreeGUI():
             leftChild = List.getNode(target.LeftChild)
             x = [target.LocationX, leftChild.LocationX]
             y = [target.LocationY, leftChild.LocationY]
-            a.plot(x,y)
+            a.plot(x,y, color = 'black')
             canvas.draw()
         if(target.RightChild != "None"):
             rightChild = List.getNode(target.RightChild)
             x = [target.LocationX, rightChild.LocationX]
             y = [target.LocationY, rightChild.LocationY]
-            a.plot(x,y)
+            a.plot(x,y, color = 'black')
             canvas.draw()
-        
 
     def clearText(self):
         self.NodeInfoTextBox.delete('1.0', END)
@@ -432,7 +431,6 @@ class ClockTreeGUI():
         a.set_ylabel('Y-Location')
         canvas.show()
 
-
     def showHelp(self):
         print("This is a work in progress\n")
 
@@ -444,40 +442,57 @@ class ClockTreeGUI():
         rightChildNum = parent.RightChild
         if(leftChildNum != "None"):
             self.leftChild = Toplevel(width = 85, height = 16)
+            #Set the title for the widget by using a string. I need still need to grab the other information!!!
+            #Do the same thing for the Right Child!!!
+            targetLeftChild = List.getNode(leftChildNum)
+            leftChild = targetLeftChild.LeftChild
+            rightChild = targetLeftChild.RightChild
+            leftChildTitle = str("LEFT CHILD:: Node Number: " + str(leftChildNum) + ", Parent: " + str(parent.NodeNumber) + ", Left Child: " + str(leftChild) + ", Right Child: " + str(rightChild) )
+            self.leftChild.title(leftChildTitle)
             self.textBoxLeft = Text(self.leftChild, height = 25, width = 85, yscrollcommand = self.scrollBarText.set)
             self.textBoxLeft.pack()
             self.textBoxLeft.insert(END, List.PrintNodeDetails(leftChildNum))
         if (rightChildNum != "None"):
             self.rightChild = Toplevel(width = 85, height = 16)
+            targetRightChild = List.getNode(rightChildNum)
+            leftChild = targetRightChild.LeftChild
+            rightChild = targetRightChild.RightChild
+            rightChildTitle = str("RIGHT CHILD:: Node Number: " + str(rightChildNum) + ", Parent: " + str(parent.NodeNumber) + ", Left Child: " + str(leftChild) + ", Right Child: " + str(rightChild))
+            self.rightChild.title(rightChildTitle)
             self.textBoxRight = Text(self.rightChild, height = 25, width = 85, yscrollcommand = self.scrollBarText.set)
             self.textBoxRight.pack()
             self.textBoxRight.insert(END, List.PrintNodeDetails(rightChildNum))
-
+    
     def enableLevelZero(self):
         levelZeroX = []
         levelZeroY = []
-        for i in range(0, len(Buffers)-1):
-            if(Buffers[i] == 0):
+        for i in range(0, len(parents)):
+            if(parents[i] == -1):
                 target = List.getNode(i)
                 levelZeroX.append(target.LocationX)
                 levelZeroY.append(target.LocationY)
-                #if(target.LeftChild != "None"):
-                    #leftChild = List.getNode(target.LeftChild)
-                    #x = [target.LocationX, leftChild.LocationX]
-                    #y = [target.LocationY, leftChild.LocationY]
-                    #a.plot(x,y)
-                    #canvas.draw()
-                #if(target.RightChild != "None"):
-                    #rightChild = List.getNode(target.RightChild)
-                    #x = [target.LocationX, rightChild.LocationX]
-                    #y = [target.LocationY, rightChild.LocationY]
-                    #a.plot(x,y)
-                    #canvas.draw()
-
-        a.plot(levelZeroX, levelZeroY, '.')
+               
+        a.plot(levelZeroX, levelZeroY, '.', color = 'red')
         canvas.draw()
-             
-             
+        return target
+            
+    def enableLevelOne(self):
+        root = self.enableLevelZero()
+        if(root.LeftChild != "None"):
+            leftChild = List.getNode(root.LeftChild)
+            x = [root.LocationX, leftChild.LocationX]
+            y = [root.LocationY, leftChild.LocationY]
+            a.plot(x,y, color = 'orange')
+            canvas.draw()
+        if(root.RightChild != "None"):
+            rightChild = List.getNode(root.RightChild)
+            x = [root.LocationX, rightChild.LocationX]
+            y = [root.LocationY, rightChild.LocationY]
+            a.plot(x,y, color = 'orange')
+            canvas.draw()
+    
+    #def clickToEnable(self):
+    #
 
 
 root = Tk()
