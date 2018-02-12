@@ -10,7 +10,7 @@ from matplotlib.backend_bases import key_press_handler
 from matplotlib.backend_bases import MouseEvent
 from matplotlib.figure import Figure
 class Node:
-    def __init__(self, NodeNumber, Capacitance, Delay, LocationX, LocationY, OrigPermReg, PermReg, SubtreeCost, SlewConstant, Parent, Buf, Distance, LeftChild, RightChild):
+    def __init__(self, NodeNumber, Capacitance, Delay, LocationX, LocationY, OrigPermReg, PermReg, SubtreeCost, SlewConstant, Parent, Buf, Distance, LeftChild, RightChild, LevelDelay):
         self.NodeNumber = NodeNumber
         self.Capacitance = Capacitance
         self.Delay = Delay
@@ -25,6 +25,7 @@ class Node:
         self.Distance = Distance
         self.LeftChild = LeftChild
         self.RightChild = RightChild
+        self.LevelDelay = LevelDelay
         self.next = None
 
 class LinkedList:
@@ -32,8 +33,8 @@ class LinkedList:
         self.head = None
         self.tail = None
         
-    def AddNode(self, NodeNumber, Capacitance, Delay, LocationX, LocationY, OrigPermReg, PermReg, SubtreeCost, SlewConstant, Parent, Buf, Distance, LeftChild, RightChild):
-        new_node = Node(NodeNumber, Capacitance, Delay, LocationX, LocationY, OrigPermReg, PermReg, SubtreeCost, SlewConstant, Parent, Buf, Distance, LeftChild, RightChild)
+    def AddNode(self, NodeNumber, Capacitance, Delay, LocationX, LocationY, OrigPermReg, PermReg, SubtreeCost, SlewConstant, Parent, Buf, Distance, LeftChild, RightChild, LevelDelay):
+        new_node = Node(NodeNumber, Capacitance, Delay, LocationX, LocationY, OrigPermReg, PermReg, SubtreeCost, SlewConstant, Parent, Buf, Distance, LeftChild, RightChild, LevelDelay)
 
         if self.head == None:
             self.head = new_node
@@ -89,8 +90,9 @@ class LinkedList:
                 distanceStr = "Distance: " + str(node.Distance) + "\n"
                 leftChildStr = "Left Child: " + str(node.LeftChild) + "\n"
                 rightChildStr = "Right Child: " + str(node.RightChild) + "\n"
+                levelDelayStr = "Level Delay" + str(node.LevelDelay) + "\n"
                 space = "-------------------------------------------------------------------------------------" + "\n"
-                catString = numStr + capacStr + delayStr + locationxStr + locationyStr + origPermRegStr + permRegStr + subtreeCostStr + slewConstStr + parentStr + bufferStr + distanceStr + leftChildStr + rightChildStr + space
+                catString = numStr + capacStr + delayStr + locationxStr + locationyStr + origPermRegStr + permRegStr + subtreeCostStr + slewConstStr + parentStr + bufferStr + distanceStr + leftChildStr + rightChildStr + levelDelayStr+ space
                 return catString
 
     def DeleteNode(self, index): 
@@ -116,19 +118,22 @@ class LinkedList:
         return count
 
     def getNode(self, index):
-        target = float(index)
-        if(target > len(NodeNumbers)):
-            print("This Node does not exist")
-            return
+        if (index == "None"):
+            return None
         else:
-            node = self.head
-            i = 0
-            while (i< target):
-                node = node.next
-                i = i + 1
-            if (i == target):
-                target = node
-                return target
+            target = float(index)
+            if(target > len(NodeNumbers)):
+                print("This Node does not exist")
+                return
+            else:
+                node = self.head
+                i = 0
+                while (i< target):
+                    node = node.next
+                    i = i + 1
+                if (i == target):
+                    target = node
+                    return target
 #################### Parsing Begins Here ########################
 
 #You should change this variable!
@@ -152,6 +157,7 @@ LeftChild = list()
 RightChild = list()
 OrigPermReg = list()
 PermReg = list()
+levelDelay = list()
 
 f = open(filename, 'r')
 
@@ -255,7 +261,7 @@ Distance.append(temp)
 
 
 if (len(NodeNumbers) == len(Capacitance) == len(Delay) == len(LocationX) == len(LocationY) == len(OrigPermReg) == len(PermReg) == len(SubtreeCost) == len(SlewConst) == len(Distance) == len(Buffers) == len(parents) == len(LeftChild) == len(RightChild)): #Check to make sure all the lists are of equal length
-    numElements = len(NodeNumbers)
+    numElements = len(NodeNumbers) 
 else:
     print("The list sizes do not match")
     print(len(NodeNumbers))
@@ -273,8 +279,25 @@ else:
     print(len(LeftChild))
     print(len(RightChild))
 
+
+delayData = open('cns01_withdata.mt0.csvt', 'r')
+
+while True:
+    text = delayData.readline()
+    if 'slew_' in text:
+        tempDelay = text.split(", ",1)[1]
+        storedDelay = float(tempDelay)
+        levelDelay.append(storedDelay)
+        #print(storedDelay)
+    elif not text:
+        break
+delayData.close()
+levelDelay.append(0)
+levelDelay.append(0)
+print(len(levelDelay))
+
 for i in range(0,numElements): #add the elements into the linked list
-    List.AddNode(NodeNumbers[i], Capacitance[i], Delay[i], LocationX[i], LocationY[i], OrigPermReg[i], PermReg[i], SubtreeCost[i], SlewConst[i], parents[i], Buffers[i], Distance[i], LeftChild[i], RightChild[i])
+    List.AddNode(NodeNumbers[i], Capacitance[i], Delay[i], LocationX[i], LocationY[i], OrigPermReg[i], PermReg[i], SubtreeCost[i], SlewConst[i], parents[i], Buffers[i], Distance[i], LeftChild[i], RightChild[i], levelDelay[i])
 
 
 ################################## BEGIN CREATING THE GUI HERE ###################################
@@ -298,6 +321,9 @@ class ClockTreeGUI():
         levelmenu.add_command(label = "Enable Level 0", command = self.enableLevelZero)
         menubar.add_cascade(label = "Levels", menu = levelmenu)
         levelmenu.add_command(label = "Enable Level 1", command = self.enableLevelOne)
+        plotmenu = Menu(menubar, tearoff = 0)
+        menubar.add_cascade(label = "Plots", menu = plotmenu)
+        plotmenu.add_command(label = "Plot Delay Time", command = self.plotDelayTime)
 
         global f
         f = Figure(figsize=(7,4), dpi =100)
@@ -346,6 +372,26 @@ class ClockTreeGUI():
                     totaldistance = xdistance + ydistance
                     closestNode = i
             self.NodeInfoTextBox.insert(END, List.PrintNodeDetails(closestNode))
+            choice = self.y.get()
+            if(choice == 1):
+                choice = self.v.get()
+                target = List.getNode(closestNode)
+                if(choice == 1):
+                    self.showChildren(target)
+                a.plot(target.LocationX, target.LocationY, marker = 'o')
+                canvas.draw()
+                if(target.LeftChild != "None"):
+                    leftChild = List.getNode(target.LeftChild)
+                    x = [target.LocationX, leftChild.LocationX]
+                    y = [target.LocationY, leftChild.LocationY]
+                    a.plot(x,y, color = 'black')
+                    canvas.draw()
+                if(target.RightChild != "None"):
+                    rightChild = List.getNode(target.RightChild)
+                    x = [target.LocationX, rightChild.LocationX]
+                    y = [target.LocationY, rightChild.LocationY]
+                    a.plot(x,y, color = 'black')
+                    canvas.draw()
 
 
         def callback(event):
@@ -491,10 +537,69 @@ class ClockTreeGUI():
             a.plot(x,y, color = 'orange')
             canvas.draw()
     
-    #def clickToEnable(self):
-    #
+    
+    def printLevelOrder(self,root):
+       #global treeHeight
+       global currentDelay
+       currentDelay = 0.0
+       treeHeight = self.height(root)
+       totalDelay_sum = 0.
+       global delays
+       delays = list()
+       for index in range(1, treeHeight+1):
+           print("The current level is %d" %(index-1))
+           self.printGivenLevel(root, index)
+           for jndex in range(0, len(delays)):
+               totalDelay_sum = totalDelay_sum + delays[jndex]
+           if currentDelay == None:
+               currentDelay = 0.
+          
+           totalDelay.append(totalDelay_sum)
 
+    def printGivenLevel(self, root, level):
+        node = List.getNode(root)
+        if node is None:
+            return
+        if level == 1:
+            currentDelay = node.LevelDelay
+            delays.append(currentDelay)
+        elif level>1:
+            self.printGivenLevel(node.LeftChild, level - 1)
+            self.printGivenLevel(node.RightChild, level - 1)
 
+    def height(self, root):
+         node = List.getNode(root)
+         if node is None:
+             return 0
+         else:
+             leftHeight = self.height(node.LeftChild)
+             rightHeight = self.height(node.RightChild)
+
+             if(leftHeight > rightHeight):
+                 return leftHeight + 1
+             else:
+                 return rightHeight + 1
+  
+    def plotDelayTime(self):
+        startingNode = 2214
+        global totalDelay
+        totalDelay = []
+        
+        self.printLevelOrder(startingNode)
+        xAxis = range(0,17)
+        print(totalDelay)
+        print(xAxis)
+        if(len(totalDelay) == len(xAxis)):
+            levelPlot = plt
+            levelPlot.plot(xAxis, totalDelay)
+            levelPlot.xlabel('Level')
+            levelPlot.ylabel('Total Delay (seconds)')
+            levelPlot.show()
+        else:
+            print("The plotting dimensions don't match!")
+            return
+
+        
 root = Tk()
 my_gui = ClockTreeGUI(root)
 root.mainloop() #Keeps the GUI running
