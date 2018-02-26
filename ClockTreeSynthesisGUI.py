@@ -565,7 +565,6 @@ class ClockTreeGUI():
             delays.append(currentDelay)
         elif level>1:
             self.printGivenLevel(node.LeftChild, level - 1)
-            self.printGivenLevel(node.RightChild, level - 1)
 
     def height(self, root):
          node = List.getNode(root)
