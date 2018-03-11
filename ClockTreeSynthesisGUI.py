@@ -3,6 +3,8 @@
 #places the information into a singly linked-list.
 import matplotlib
 import pylab as plt
+import numpy as np
+import matplotlib.mlab as mlab
 from tkinter import *
 matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
@@ -134,6 +136,7 @@ class LinkedList:
                 if (i == target):
                     target = node
                     return target
+  
 #################### Parsing Begins Here ########################
 
 #You should change this variable!
@@ -141,7 +144,6 @@ filename = "cns01.im" #Declare the file name
 
 
 List = LinkedList() #Establish the linked list
-
 #Create lists for each field of the "Node." These lists are later used to add information into a linked list
 NodeNumbers = list()
 Capacitance = list()
@@ -186,6 +188,7 @@ while True:
     elif 'delay' in text:
         tempDelay = text.split("delay: ",1)[1]
         storedDelay = str(tempDelay)
+        
         Delay.append(storedDelay)
     elif 'location' in text:
         tempLocationX = text.split("location: ",1)[1]
@@ -294,7 +297,6 @@ while True:
 delayData.close()
 levelDelay.append(0)
 levelDelay.append(0)
-print(len(levelDelay))
 
 for i in range(0,numElements): #add the elements into the linked list
     List.AddNode(NodeNumbers[i], Capacitance[i], Delay[i], LocationX[i], LocationY[i], OrigPermReg[i], PermReg[i], SubtreeCost[i], SlewConst[i], parents[i], Buffers[i], Distance[i], LeftChild[i], RightChild[i], levelDelay[i])
@@ -323,7 +325,9 @@ class ClockTreeGUI():
         levelmenu.add_command(label = "Enable Level 1", command = self.enableLevelOne)
         plotmenu = Menu(menubar, tearoff = 0)
         menubar.add_cascade(label = "Plots", menu = plotmenu)
-        plotmenu.add_command(label = "Plot Delay Time", command = self.plotDelayTime)
+        plotmenu.add_command(label = "Slew Histogram", command = self.makeHistSlew)
+        plotmenu.add_command(label = "Delay Histogram", command = self.makeHistDelay)
+        plotmenu.add_command(label = "Plot Delay Time", command = self.plotDelayTimeImproved)
 
         global f
         f = Figure(figsize=(7,4), dpi =100)
@@ -537,7 +541,41 @@ class ClockTreeGUI():
             a.plot(x,y, color = 'orange')
             canvas.draw()
     
-    
+    def makeHistSlew(self):
+       # example data
+        data = levelDelay
+        num_bins = 20
+        # the histogram of the data
+        n, bins, patches = plt.hist(data, num_bins, facecolor='green', alpha=0.5)
+        plt.xlabel('Bins')
+        plt.ylabel('Frequency')
+        plt.title("Histogram of Slew Times")
+
+        # Tweak spacing to prevent clipping of ylabel
+        plt.subplots_adjust(left=0.15)
+        plt.show()
+
+
+    def makeHistDelay(self):
+       # example data
+       floatDelay = []
+       for index in Delay:
+           index = index.split(" total")[0]
+           floatDelay.append(float(index))
+
+
+       data = floatDelay
+       num_bins = 20
+       # the histogram of the data
+       n, bins, patches = plt.hist(data, num_bins, facecolor='green')
+       plt.xlabel('Bins')
+       plt.ylabel('Frequency')
+       plt.title("Histogram of Delay Times")
+
+       # Tweak spacing to prevent clipping of ylabel
+       plt.subplots_adjust(left=0.15)
+       plt.show()
+
     def printLevelOrder(self,root):
        #global treeHeight
        global currentDelay
@@ -597,7 +635,35 @@ class ClockTreeGUI():
         else:
             print("The plotting dimensions don't match!")
             return
-
+    def plotDelayTimeImproved(self):
+        startingNode = 2214
+        totalDelay = 0.0
+        delay_list = []
+        delay_list.append(totalDelay)
+        direction = -1 #-1 for left, 1 for right
+        node = List.getNode(startingNode)
+        if direction < 0:
+            while(node.LeftChild != 'None'):
+                current_delay_str = node.Delay.split(" total")[0]
+                current_delay_flt = float(current_delay_str)
+                totalDelay = totalDelay + current_delay_flt
+                delay_list.append(totalDelay)
+                nextNode = node.LeftChild
+                node = List.getNode(nextNode)
+        else:
+            while(node.RightChild != 'None'):
+                current_delay_str = node.Delay.split(" total")[0]
+                current_delay_flt = float(current_delay_str)
+                totalDelay = totalDelay + current_delay_flt
+                nextNode = node.RightChild
+                node = nextNode
+        xAxis = range(0, len(delay_list))
+        print(delay_list)
+        levelPlot = plt
+        levelPlot.plot(xAxis, delay_list)
+        levelPlot.xlabel('Level')
+        levelPlot.ylabel('Total Delay (seconds)')
+        levelPlot.show()
         
 root = Tk()
 my_gui = ClockTreeGUI(root)
